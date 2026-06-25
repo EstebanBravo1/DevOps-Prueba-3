@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const {
-  DB_HOST = "127.0.0.1", // acá resuelve internamente en eks. Se cambió el tienda-db por 127.0.0.1 para juntar el backend y la base de datos en la misma task.
+  DB_HOST = tienda-db, // acá resuelve internamente en eks
   DB_USER = "root",
   DB_PASSWORD = "admin123",
   DB_NAME = "tienda_perritos",
@@ -19,34 +19,21 @@ app.use(express.json());
 let pool;
 
 // Inicializar pool de conexiones
-// Inicializar pool de conexiones con reintentos
 async function initDb() {
-  let intentos = 5;
-  while (intentos > 0) {
-    try {
-      pool = mysql.createPool({
-        host: DB_HOST,
-        user: DB_USER,
-        password: DB_PASSWORD,
-        database: DB_NAME,
-        port: DB_PORT,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-      });
-      
-      // Intentar una consulta de prueba rápida para verificar si la DB realmente responde
-      await pool.query("SELECT 1");
-      console.log("Pool de conexiones MySQL inicializado con éxito.");
-      return; // Si funciona, salimos de la función
-    } catch (err) {
-      intentos--;
-      console.error(`Error al conectar a MySQL. Intentos restantes: ${intentos}. Esperando 5 segundos...`, err);
-      if (intentos === 0) {
-        console.error("No se pudo conectar a la base de datos después de varios intentos. Saliendo...");
-      }
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Espera 5 segundos antes de reintentar
-    }
+  try {
+    pool = mysql.createPool({
+      host: DB_HOST,
+      user: DB_USER,
+      password: DB_PASSWORD,
+      database: DB_NAME,
+      port: DB_PORT,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    });
+    console.log("Pool de conexiones MySQL inicializado.");
+  } catch (err) {
+    console.error("Error al inicializar pool de MySQL:", err);
   }
 }
 
@@ -153,15 +140,4 @@ app.get("/api/health", (req, res) => {
 app.listen(PORT, async () => {
   console.log(`Servidor backend escuchando en puerto ${PORT}`);
   await initDb();
-});
-
-// Capturar errores globales para evitar que el contenedor muera de golpe
-process.on('uncaughtException', (err) => {
-  console.error('❌ Ocurrió un error no controlado:', err.message);
-  console.error(err.stack);
-  // NO ponemos process.exit(1) para que el contenedor siga vivo en AWS
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Promesa no manejada:', reason);
 });
