@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const {
-  DB_HOST = tienda-db, // acá resuelve internamente en eks
+  DB_HOST = "127.0.0.1", // acá resuelve internamente en eks. Se cambió el tienda-db por 127.0.0.1 para juntar el backend y la base de datos en la misma task.
   DB_USER = "root",
   DB_PASSWORD = "admin123",
   DB_NAME = "tienda_perritos",
