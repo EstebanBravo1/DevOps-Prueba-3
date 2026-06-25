@@ -19,21 +19,35 @@ app.use(express.json());
 let pool;
 
 // Inicializar pool de conexiones
+// Inicializar pool de conexiones con reintentos
 async function initDb() {
-  try {
-    pool = mysql.createPool({
-      host: DB_HOST,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      database: DB_NAME,
-      port: DB_PORT,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-    });
-    console.log("Pool de conexiones MySQL inicializado.");
-  } catch (err) {
-    console.error("Error al inicializar pool de MySQL:", err);
+  let intentos = 5;
+  while (intentos > 0) {
+    try {
+      pool = mysql.createPool({
+        host: DB_HOST,
+        user: DB_USER,
+        password: DB_PASSWORD,
+        database: DB_NAME,
+        port: DB_PORT,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+      
+      // Intentar una consulta de prueba rápida para verificar si la DB realmente responde
+      await pool.query("SELECT 1");
+      console.log("Pool de conexiones MySQL inicializado con éxito.");
+      return; // Si funciona, salimos de la función
+    } catch (err) {
+      intentos--;
+      console.error(`Error al conectar a MySQL. Intentos restantes: ${intentos}. Esperando 5 segundos...`, err);
+      if (intentos === 0) {
+        console.error("No se pudo conectar a la base de datos después de varios intentos. Saliendo...");
+        process.exit(1); // Solo muere si falló los 5 intentos
+      }
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Espera 5 segundos antes de reintentar
+    }
   }
 }
 
