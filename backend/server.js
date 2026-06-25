@@ -44,7 +44,6 @@ async function initDb() {
       console.error(`Error al conectar a MySQL. Intentos restantes: ${intentos}. Esperando 5 segundos...`, err);
       if (intentos === 0) {
         console.error("No se pudo conectar a la base de datos después de varios intentos. Saliendo...");
-        process.exit(1); // Solo muere si falló los 5 intentos
       }
       await new Promise(resolve => setTimeout(resolve, 5000)); // Espera 5 segundos antes de reintentar
     }
@@ -154,4 +153,15 @@ app.get("/api/health", (req, res) => {
 app.listen(PORT, async () => {
   console.log(`Servidor backend escuchando en puerto ${PORT}`);
   await initDb();
+});
+
+// Capturar errores globales para evitar que el contenedor muera de golpe
+process.on('uncaughtException', (err) => {
+  console.error('❌ Ocurrió un error no controlado:', err.message);
+  console.error(err.stack);
+  // NO ponemos process.exit(1) para que el contenedor siga vivo en AWS
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Promesa no manejada:', reason);
 });
