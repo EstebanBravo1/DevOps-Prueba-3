@@ -5,13 +5,12 @@ const mysql = require("mysql2/promise");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const {
-  DB_HOST = "3.92.183.24", // acá resuelve internamente en eks
-  DB_USER = "root",
-  DB_PASSWORD = "admin123",
-  DB_NAME = "tienda_perritos",
-  DB_PORT = 3306,
-} = process.env;
+
+const DB_HOST = "3.92.183.24"; // acá resuelve internamente en eks
+const DB_USER = "root";
+const DB_PASSWORD = "admin123";
+const DB_NAME = "tienda_perritos";
+const DB_PORT = 3306;
 
 app.use(cors());
 app.use(express.json());
