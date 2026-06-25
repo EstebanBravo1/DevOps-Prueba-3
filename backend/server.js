@@ -5,7 +5,6 @@ const mysql = require("mysql2/promise");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-
 const DB_HOST = "3.92.183.24"; // acá resuelve internamente en eks
 const DB_USER = "root";
 const DB_PASSWORD = "admin123";
